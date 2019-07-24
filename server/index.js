@@ -21,6 +21,9 @@ const schema = buildSchema(`
     maxHP: Int
     attacks: attacks
   }
+  type types {
+    type: String!
+  }
   type evolutions {
     id: ID!
     name: String!
@@ -57,7 +60,7 @@ const schema = buildSchema(`
     MaximumHeight(maxHeight: Float!): Pokemon
     AttacksFast(type: String!): [fast]
     AttacksSpecial(type: String!): [special]
-    Types: String!
+    Types: [String]!
     SearchByType(name: String): [Pokemon]
     SearchByAttack(name: String): [Pokemon]
   }
@@ -65,7 +68,7 @@ const schema = buildSchema(`
     UpdateName(id: ID!, input: String!): Pokemon
     AddPokemon(name: String!, type: String!, resistant:[String!]): Pokemon
     DeletePokemon(id: String!): Pokemon
-    AddType(name: String): Pokemon
+    AddType(name: String): [String!]
     UpdateType: Pokemon
     DeleteType: Pokemon
     AddFastAttack(name: String!, type: String!, damage:Int): attacks
@@ -151,7 +154,7 @@ const root = {
   AddType: (request) => {
     const newType = request.name;
     data.types.push(newType);
-    return newType;
+    return data.types;
   },
   AddFastAttack: (request) => {
     const newPoke = {

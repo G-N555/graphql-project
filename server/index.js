@@ -7,18 +7,18 @@ const data = require("./data");
 // The schema should model the full data object available.
 const schema = buildSchema(`
   type Pokemon {
-    id: String
-    name: String!
-    classification: String!
-    types: [String!]
-    resistant: [String!]
+    id: ID
+    name: String
+    classification: String
+    types: [String]
+    resistant: [String]
     weight: weight
     height: height
-    fleeRate: Float!
+    fleeRate: Float
     evolutionRequirements: evolutionRequirements
     evolutions: [evolutions]
-    maxCP: Int!
-    maxHP: Int!
+    maxCP: Int
+    maxHP: Int
     attacks: attacks
   }
   type evolutions {
@@ -55,12 +55,22 @@ const schema = buildSchema(`
     Pokemons: [Pokemon]
     Pokemon(id: String!): Pokemon
     MaximumHeight(maxHeight: Float!): Pokemon
-    Attacks(type: String!): [attacks]
+    AttacksFast(type: String!): [fast]
+    AttacksSpecial(type: String!): [special]
     Types: String!
     SearchByType(name: String): [Pokemon]
+    SearchByAttack(name: String): [Pokemon]
   }
   type Mutation {
-    updateName(id: ID!, input: String!): Pokemon
+    UpdateName(id: ID!, input: String!): Pokemon
+    AddPokemon(name: String!, type: String!, resistant:[String!]): Pokemon
+    DeletePokemon(id: String!): Pokemon
+    AddType(name: String): Pokemon
+    UpdateType: Pokemon
+    DeleteType: Pokemon
+    AddFastAttack(name: String!, type: String!, damage:Int): attacks
+    UpdateAttack: Pokemon
+    DeleteAttack: Pokemon
   }
 `);
 
@@ -76,10 +86,13 @@ const root = {
       return data.pokemon.find((pokemon) => pokemon.id === request.id);
     }
   },
-  Attacks: (request) => {
+  AttacksFast: (request) => {
     if (request.type === "fast") {
       return data.attacks.fast;
-    } else {
+    }
+  },
+  AttacksSpecial: (request) => {
+    if (request.type === "special") {
       return data.attacks.special;
     }
   },
@@ -97,8 +110,17 @@ const root = {
       pokemon.types.includes(request.name)
     );
   },
-  updateName: (request) => {
-    console.log(request);
+  SearchByAttack: (request) => {
+    return data.pokemon.filter((pokemon) => {
+      const combine = pokemon.attacks.fast.concat(pokemon.attacks.special);
+      for (const attack of combine) {
+        if (attack.name === request.name) {
+          return true;
+        }
+      }
+    });
+  },
+  UpdateName: (request) => {
     const targetPoke = data.pokemon.find(
       (pokemon) => pokemon.id === request.id
     );
@@ -106,6 +128,40 @@ const root = {
       targetPoke.name = request.input;
     }
     return targetPoke;
+  },
+  AddPokemon: (request) => {
+    let newID = data.pokemon.length + 1;
+    const newPoke = {
+      name: request.name,
+      type: request.type,
+      resistant: request.resistant,
+      id: newID,
+    };
+    data.pokemon.push(newPoke);
+    return newPoke;
+  },
+  DeletePokemon: (request) => {
+    for (const index in data.pokemon) {
+      if (data.pokemon[index].id === request.id) {
+        data.pokemon.splice(index, 1);
+      }
+    }
+    return data.pokemon;
+  },
+  AddType: (request) => {
+    const newType = request.name;
+    data.types.push(newType);
+    return newType;
+  },
+  AddFastAttack: (request) => {
+    const newPoke = {
+      name: request.name,
+      type: request.type,
+      damage: request.damage,
+    };
+    data.attacks.fast.push(newPoke);
+    console.log(data.attacks.fast);
+    return request.attacks;
   },
 };
 

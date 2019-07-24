@@ -12,10 +12,10 @@ const schema = buildSchema(`
     classification: String!
     types: [String!]
     resistant: [String!]
-    weight: [String!]
-    height: [String!]
+    weight: weight
+    height: height
     fleeRate: Float!
-    evolutionRequirements: [String]
+    evolutionRequirements: evolutionRequirements
     evolutions: [evolutions]
     maxCP: Int!
     maxHP: Int!
@@ -23,6 +23,10 @@ const schema = buildSchema(`
   }
   type evolutions {
     id: ID!
+    name: String!
+  }
+  type evolutionRequirements {
+    amount: Int!
     name: String!
   }
   type attacks {
@@ -39,10 +43,23 @@ const schema = buildSchema(`
     type: String!
     damage: Int!
   }
-
+  type height {
+    minimum: String!
+    maximum: String!
+  }
+  type weight {
+    minimum: String!
+    maximum: String!
+  }
   type Query {
     Pokemons: [Pokemon]
     Pokemon(name: String!): Pokemon
+    MaximumHeight(maxHeight: Float!): Pokemon
+    Attacks: attacks
+    Types: [String!]
+  }
+  type Mutation {
+    updateName(id: ID!, input: String!): Pokemon
   }
 `);
 
@@ -53,6 +70,28 @@ const root = {
   },
   Pokemon: (request) => {
     return data.pokemon.find((pokemon) => pokemon.name === request.name);
+  },
+  Attacks: () => {
+    return data.attacks;
+  },
+  Types: () => {
+    return data.types;
+  },
+  MaximumHeight: (request) => {
+    return data.pokemon.find(
+      (pokemon) =>
+        Number(pokemon.height.maximum.slice(0, -1)) >= request.maxHeight
+    );
+  },
+  updateName: (request) => {
+    console.log(request);
+    const targetPoke = data.pokemon.find(
+      (pokemon) => pokemon.id === request.id
+    );
+    if (targetPoke !== undefined) {
+      targetPoke.name = request.input;
+    }
+    return targetPoke;
   },
 };
 

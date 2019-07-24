@@ -12,8 +12,8 @@ const schema = buildSchema(`
     classification: String
     types: [String]
     resistant: [String]
-    weight: weight
-    height: height
+    weight: scale
+    height: scale
     fleeRate: Float
     evolutionRequirements: evolutionRequirements
     evolutions: [evolutions]
@@ -24,11 +24,6 @@ const schema = buildSchema(`
   type types {
     type: String!
   }
-  input Attack{
-    name: String!
-    type: String!
-    damage: Int
-  }
   type evolutions {
     id: ID!
     name: String!
@@ -38,24 +33,20 @@ const schema = buildSchema(`
     name: String!
   }
   type attacks {
-    fast: [fast]
-    special: [special]
+    fast: [attackType]
+    special: [attackType]
   }
-  type fast {
-    name: String!
+  type attackType {
+    name: String
     type: String
     damage: Int
   }
-  type special {
-    name: String!
-    type: String!
-    damage: Int!
+  input inputAttack {
+    name: String
+    type: String
+    damage: Int
   }
-  type height {
-    minimum: String!
-    maximum: String!
-  }
-  type weight {
+  type scale {
     minimum: String!
     maximum: String!
   }
@@ -63,11 +54,10 @@ const schema = buildSchema(`
     Pokemons: [Pokemon]
     Pokemon(id: String!): Pokemon
     MaximumHeight(maxHeight: Float!): Pokemon
-    AttacksFast(type: String!): [fast]
-    AttacksSpecial(type: String!): [special]
+    Attacks(type: String!): [attackType]
     Types: [String]!
-    SearchByType(name: String): [Pokemon]
-    SearchByAttack(name: String): [Pokemon]
+    SearchByType(name: String): Pokemon
+    SearchByAttack(name: String): Pokemon
   }
   type Mutation {
     UpdateName(id: ID!, input: String!): Pokemon
@@ -76,10 +66,9 @@ const schema = buildSchema(`
     AddType(name: String): [String!]
     UpdateType(name: String, change: String): [String]
     DeleteType(name: String): [String]
-    AddFastAttack(name: String!, type: String!, damage:Int): [fast]
-    AddSpecialAttack(name: String!, type: String!, damage:Int): [special]
-    UpdateAttack(name: String!, type: String!, input: Attack): attacks
-    DeleteAttack: Pokemon
+    AddAttack(attackType: String!, name: String!, type: String!, damage:Int) : [attackType]
+    UpdateAttack(name: String!, type: String!, input: inputAttack): [attackType]
+    DeleteAttack(name: String!, type: String!): [attackType]
   }
 `);
 
@@ -95,14 +84,13 @@ const root = {
       return data.pokemon.find((pokemon) => pokemon.id === request.id);
     }
   },
-  AttacksFast: (request) => {
+  Attacks: (request) => {
     if (request.type === "fast") {
       return data.attacks.fast;
-    }
-  },
-  AttacksSpecial: (request) => {
-    if (request.type === "special") {
+    } else if (request.type === "special") {
       return data.attacks.special;
+    } else {
+      return data.attacks;
     }
   },
   Types: () => {
@@ -178,28 +166,34 @@ const root = {
     }
     return data.types;
   },
-  AddFastAttack: (request) => {
-    const newPoke = {
+  AddAttack: (request) => {
+    const newAttack = {
       name: request.name,
       type: request.type,
       damage: request.damage,
     };
-    data.attacks.fast.push(newPoke);
-    return data.attacks.fast;
-  },
-  AddSpecialAttack: (request) => {
-    const newPoke = {
-      name: request.name,
-      type: request.type,
-      damage: request.damage,
-    };
-    data.attacks.special.push(newPoke);
-    return data.attacks.special;
+    data.attacks[request.attackType].push(newAttack);
+    return data.attacks[request.attackType];
   },
   UpdateAttack: (request) => {
-    const nameofAttack = request.name;
-    const fastOrSpecial = request.type;
-    //for (const data.attacks[fastOrSpecial] )
+    const baseData = data.attacks[request.type];
+    for (const index in baseData) {
+      if (baseData[index].name === request.name) {
+        baseData[index].name = request.input.name;
+        baseData[index].type = request.input.type;
+        baseData[index].damage = request.input.damage;
+      }
+    }
+    return baseData;
+  },
+  DeleteAttack: (request) => {
+    const baseData = data.attacks[request.type];
+    for (const index in baseData) {
+      if (baseData[index].name === request.name) {
+        baseData.splice(index, 1);
+      }
+    }
+    return baseData;
   },
 };
 

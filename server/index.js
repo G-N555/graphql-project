@@ -53,7 +53,7 @@ const schema = buildSchema(`
   }
   type Query {
     Pokemons: [Pokemon]
-    Pokemon(name: String!): Pokemon
+    Pokemon(id: String!): Pokemon
     MaximumHeight(maxHeight: Float!): Pokemon
     Attacks: attacks
     Types: [String!]
@@ -69,7 +69,11 @@ const root = {
     return data.pokemon;
   },
   Pokemon: (request) => {
-    return data.pokemon.find((pokemon) => pokemon.name === request.name);
+    if (~~request.id === 0) {
+      return data.pokemon.find((pokemon) => pokemon.name === request.id);
+    } else {
+      return data.pokemon.find((pokemon) => pokemon.id === request.id);
+    }
   },
   Attacks: () => {
     return data.attacks;

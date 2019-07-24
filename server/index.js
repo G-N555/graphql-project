@@ -24,6 +24,11 @@ const schema = buildSchema(`
   type types {
     type: String!
   }
+  input Attack{
+    name: String!
+    type: String!
+    damage: Int
+  }
   type evolutions {
     id: ID!
     name: String!
@@ -70,10 +75,10 @@ const schema = buildSchema(`
     DeletePokemon(id: String!): Pokemon
     AddType(name: String): [String!]
     UpdateType(name: String, change: String): [String]
-    DeleteType: Pokemon
-    AddFastAttack(name: String!, type: String!, damage:Int): attacks
-    AddSpecialAttack(name: String!, type: String!, damage:Int): attacks
-    UpdateAttack: Pokemon
+    DeleteType(name: String): [String]
+    AddFastAttack(name: String!, type: String!, damage:Int): [fast]
+    AddSpecialAttack(name: String!, type: String!, damage:Int): [special]
+    UpdateAttack(name: String!, type: String!, input: Attack): attacks
     DeleteAttack: Pokemon
   }
 `);
@@ -165,6 +170,14 @@ const root = {
     }
     return data.types;
   },
+  DeleteType: (request) => {
+    for (const index in data.types) {
+      if (data.types[index] === request.name) {
+        data.types.splice(index, 1);
+      }
+    }
+    return data.types;
+  },
   AddFastAttack: (request) => {
     const newPoke = {
       name: request.name,
@@ -172,8 +185,21 @@ const root = {
       damage: request.damage,
     };
     data.attacks.fast.push(newPoke);
-    console.log(data.attacks.fast);
-    return request.attacks;
+    return data.attacks.fast;
+  },
+  AddSpecialAttack: (request) => {
+    const newPoke = {
+      name: request.name,
+      type: request.type,
+      damage: request.damage,
+    };
+    data.attacks.special.push(newPoke);
+    return data.attacks.special;
+  },
+  UpdateAttack: (request) => {
+    const nameofAttack = request.name;
+    const fastOrSpecial = request.type;
+    //for (const data.attacks[fastOrSpecial] )
   },
 };
 

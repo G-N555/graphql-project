@@ -69,9 +69,10 @@ const schema = buildSchema(`
     AddPokemon(name: String!, type: String!, resistant:[String!]): Pokemon
     DeletePokemon(id: String!): Pokemon
     AddType(name: String): [String!]
-    UpdateType: Pokemon
+    UpdateType(name: String, change: String): [String]
     DeleteType: Pokemon
     AddFastAttack(name: String!, type: String!, damage:Int): attacks
+    AddSpecialAttack(name: String!, type: String!, damage:Int): attacks
     UpdateAttack: Pokemon
     DeleteAttack: Pokemon
   }
@@ -154,6 +155,14 @@ const root = {
   AddType: (request) => {
     const newType = request.name;
     data.types.push(newType);
+    return data.types;
+  },
+  UpdateType: (request) => {
+    for (const index in data.types) {
+      if (data.types[index] === request.name) {
+        data.types[index] = request.change;
+      }
+    }
     return data.types;
   },
   AddFastAttack: (request) => {

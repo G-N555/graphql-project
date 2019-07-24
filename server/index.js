@@ -55,8 +55,9 @@ const schema = buildSchema(`
     Pokemons: [Pokemon]
     Pokemon(id: String!): Pokemon
     MaximumHeight(maxHeight: Float!): Pokemon
-    Attacks: attacks
-    Types: [String!]
+    Attacks(type: String!): [attacks]
+    Types: String!
+    SearchByType(name: String): [Pokemon]
   }
   type Mutation {
     updateName(id: ID!, input: String!): Pokemon
@@ -75,8 +76,12 @@ const root = {
       return data.pokemon.find((pokemon) => pokemon.id === request.id);
     }
   },
-  Attacks: () => {
-    return data.attacks;
+  Attacks: (request) => {
+    if (request.type === "fast") {
+      return data.attacks.fast;
+    } else {
+      return data.attacks.special;
+    }
   },
   Types: () => {
     return data.types;
@@ -85,6 +90,11 @@ const root = {
     return data.pokemon.find(
       (pokemon) =>
         Number(pokemon.height.maximum.slice(0, -1)) >= request.maxHeight
+    );
+  },
+  SearchByType: (request) => {
+    return data.pokemon.filter((pokemon) =>
+      pokemon.types.includes(request.name)
     );
   },
   updateName: (request) => {
